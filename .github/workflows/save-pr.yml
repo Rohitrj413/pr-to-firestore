@@ -1,0 +1,27 @@
+name: Save PR to Firestore
+
+on:
+  pull_request:
+    types: [opened, reopened, edited, closed]
+
+jobs:
+  save-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate with Google Cloud
+        id: 'auth'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - name: Send PR data to Cloud Function
+        env:
+          FUNCTION_URL: ${{ secrets.GCP_FUNCTION_URL }}
+        run: |
+          curl -X POST \
+          -H "Content-Type: application/json" \
+          -d "${{ toJSON(github.event) }}" \
+          $FUNCTION_URL
