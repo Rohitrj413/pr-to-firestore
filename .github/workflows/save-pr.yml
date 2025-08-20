@@ -23,5 +23,5 @@ jobs:
         run: |
           curl -X POST \
           -H "Content-Type: application/json" \
-          -d "${{ toJSON(github.event) }}" \
+          -d '${{ toJSON(github.event) }}' \
           $FUNCTION_URL
