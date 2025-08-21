@@ -7,6 +7,9 @@ on:
 jobs:
   save-pr:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -18,10 +21,11 @@ jobs:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
       - name: Send PR data to Cloud Function
-        env:
-          FUNCTION_URL: ${{ secrets.GCP_FUNCTION_URL }}
+        id: 'invoke'
         run: |
+          ID_TOKEN=$(gcloud auth print-identity-token --audiences=${{ secrets.GCP_FUNCTION_URL }})
           curl -X POST \
           -H "Content-Type: application/json" \
+          -H "Authorization: Bearer $ID_TOKEN" \
           -d '${{ toJSON(github.event) }}' \
-          $FUNCTION_URL
+          ${{ secrets.GCP_FUNCTION_URL }}
